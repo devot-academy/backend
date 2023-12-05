@@ -1,33 +1,17 @@
-import express, { Request, Response } from 'express';
-import { knex } from 'knex'
-import 'dotenv/config';
+import { buildServer, IReq, IRes, middlewareEnableJSONInRequest } from './lib/framework-server'
+import { connection } from './lib/query-builder'
+import 'dotenv/config'
 
-var app = express();
 
-app.use(express.json());
+var app = buildServer();
 
-const { 
-    DATADASE_HOST,
-    DATADASE_PORT,
-    DATADASE_USER,
-    DATADASE_PASSWORD,
-    DATADASE_NAME 
-} = process.env;
+app.use(middlewareEnableJSONInRequest());
 
-const pg = knex({
-    client: 'pg',
-    connection: {
-        host : DATADASE_HOST,
-        port : Number(DATADASE_PORT),
-        user :  DATADASE_USER,
-        password : DATADASE_PASSWORD,
-        database : DATADASE_NAME
-    }
-})
+const database = connection;
 
-app.get('/person', async (req: Request, res: Response) => {
+app.get('/person', async (req: IReq, res: IRes) => {
     try {
-        const persons = await pg.select('*').from('person');
+        const persons = await database.select('*').from('person');
         res.status(200).json({ persons });
     } catch (err) {
         console.log(err)
@@ -35,9 +19,9 @@ app.get('/person', async (req: Request, res: Response) => {
     }
 });
 
-app.get('/gender', async (req: Request, res: Response) => {
+app.get('/gender', async (req: IReq, res: IRes) => {
     try {
-        const genders = await pg.select('*').from('gender');
+        const genders = await database.select('*').from('gender');
         res.status(200).json({ genders });
     } catch (err) {
         console.log(err)
@@ -45,12 +29,12 @@ app.get('/gender', async (req: Request, res: Response) => {
     }
 });
 
-app.post('/gender', async (req: Request, res: Response) => {
+app.post('/gender', async (req: IReq, res: IRes) => {
     try {
         const { description } = req.body;
         if (!description) throw new Error("Bad Request") 
 
-        await pg('gender').insert({ description });
+        await database('gender').insert({ description });
 
         res.status(201).json({ status: 200 })
     } catch (err: { message: string }) {
