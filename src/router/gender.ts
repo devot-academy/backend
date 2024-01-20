@@ -1,29 +1,20 @@
 import { IReq, IRes, buildServer} from '../lib/framework-server'
-import { connection } from '../lib/query-builder';
+import * as useCase from '../controller/createGender'
 
 const router = buildServer.Router();
 
-router.get('/gender', async (req: IReq, res: IRes) => {
-    try {
-        const genders = await connection.select('*').from('gender');
-        res.status(200).json({ genders });
-    } catch (err) {
-        console.log(err)
-        res.status(500).json({ status: 500, message: 'Internal server Error' });
-    }
+router.get('/', async (req: IReq, res: IRes) => {
+    res.status(200).json({ message: 'hello world' });
 });
 
 router.post('/gender', async (req: IReq, res: IRes) => {
     try {
-        const { description } = req.body;
-        if (!description) throw new Error("Bad Request") 
-
-        await connection('gender').insert({ description });
-
-        res.status(201).json({ status: 200 })
-    } catch (err: { message: string }) {
+        const gender = req.body;
+        await useCase.createGender(gender);
+        res.status(201).json({ message: 'Genero cadastrado com sucesso!' });
+    } catch (err) {
         console.log(err)
-        res.status(400).json({ status: 400, message: err?.message});
+        res.status(403).json({ message: err.message });
     }
 })
 
